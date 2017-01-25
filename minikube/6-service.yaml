@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '3000'
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
+  labels:
+  name: lunchtalk
+  namespace: default
+spec:
+  selector:
+    app: lunchtalk
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 3000
+  type: NodePort
+  #sessionAffinity: None
+  #type: LoadBalancer

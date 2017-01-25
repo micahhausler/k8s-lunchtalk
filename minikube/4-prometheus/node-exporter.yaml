@@ -1,0 +1,75 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  labels:
+    app: node-exporter
+  name: node-exporter
+spec:
+  template:
+    metadata:
+      labels:
+        app: node-exporter
+      name: node-exporter
+    spec:
+      containers:
+      - image: "prom/node-exporter:0.12.0"
+        resources:
+          requests:
+            memory: 16Mi
+          limits:
+            memory: 32Mi
+        args:
+        - "-web.listen-address=:9999"
+        name: node-exporter
+        volumeMounts:
+        - mountPath: /var/lib
+          name: var-lib
+          readOnly: true
+        - mountPath: /etc/hostname
+          name: etc-hostname
+          readOnly: true
+        - mountPath: /sys
+          name: sys
+          readOnly: false
+        - mountPath: /dev
+          name: dev
+          readOnly: false
+        - mountPath: /var/run/docker.sock
+          name: var-run-docker-sock
+      hostNetwork: true
+      hostPID: true
+      volumes:
+      - hostPath:
+          path: /var/lib
+        name: var-lib
+      - hostPath:
+          path: /etc/hostname
+        name: etc-hostname
+      - hostPath:
+          path: /sys
+        name: sys
+      - hostPath:
+          path: /dev
+        name: dev
+      - hostPath:
+          path: /var/run/docker.sock
+        name: var-run-docker-sock
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: "9999"
+  labels:
+    app: node-exporter
+  name: node-exporter
+spec:
+  ports:
+  - name: scrape
+    port: 9999
+    protocol: TCP
+  selector:
+    app: node-exporter
+  type: ClusterIP
+

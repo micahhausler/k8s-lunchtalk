@@ -1,0 +1,56 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      name: prometheus
+      labels:
+        app: prometheus
+        svc: prometheus-ha
+    spec:
+      containers:
+      - name: prometheus
+        image: "prom/prometheus:latest"
+        #image: "prom/prometheus:v1.2.1"
+        args:
+          - '-storage.local.retention=24h'
+          - '-storage.local.memory-chunks=50000'
+          - '-config.file=/etc/prometheus/config.yaml'
+          - '-storage.local.path=/data'
+          - '-log.level=info'
+          #- '-web.route-prefix=/'
+          #- '-web.external-url=http://localhost/api/v1/proxy/namespaces/default/services/prometheus:9090/'
+          #- '-alertmanager.url=http://alertmanager.default.svc.cluster.local'
+          #- '-log.format=logger:stdout?json=true'
+        ports:
+        - name: web
+          containerPort: 9090
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/prometheus
+        #- name: prometheus-data-volume
+        #  mountPath: /data
+        livenessProbe:
+          httpGet:
+            path: /graph
+            port: 9090
+          initialDelaySeconds: 300
+          timeoutSeconds: 20
+        #resources:
+        #  limits:
+        #    #cpu: 500.0m
+        #    memory: 3Gi
+      volumes:
+      - name: config-volume
+        configMap:
+          name: prometheus.config
+      #- name: prometheus-data-volume
+      #  persistentVolumeClaim:
+      #    claimName: prometheus1-data-pvc
