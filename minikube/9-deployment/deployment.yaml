@@ -4,7 +4,7 @@ metadata:
   name: lunchtalk
   namespace: demo
 spec:
-  replicas: 5
+  replicas: 3
   selector:
     matchLabels:
       app: lunchtalk
@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: lunchtalk
-        image: "micahhausler/k8s-lunchtalk:a84d3cf"
+        image: "micahhausler/k8s-lunchtalk:9338bd8"
         env:
         - name: REDIS_HOST
           valueFrom:
@@ -32,7 +32,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: lunchtalk.secret
-              key: redis.password
+              key: password
         resources:
           requests:
             cpu: 250.0m

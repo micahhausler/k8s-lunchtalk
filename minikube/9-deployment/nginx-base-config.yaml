@@ -24,7 +24,6 @@ data:
         keepalive_timeout 65;
         server_tokens off;
 
-        include /opt/nginx/mime.types;
         default_type text/html;
 
         set_real_ip_from  192.168.0.0/16;

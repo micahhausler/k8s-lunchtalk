@@ -34,7 +34,7 @@ metadata:
   labels:
     app: lunchtalk
   name: lunchtalk-internal
-  namespace: lunchtalk
+  namespace: demo
 spec:
   selector:
     app: lunchtalk
