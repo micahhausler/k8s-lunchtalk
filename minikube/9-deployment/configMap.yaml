@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lunchtalk.config
+  namespace: demo
+data:
+  redis.host: redis.demo.svc.cluster.local
+  lunchtalk.conf: |-
+    # Nginx for pliny
+
+    map $request_uri $loggable {
+        ~^/assets  0;
+        ~^/favicon.ico 0;
+        default 1;
+    }
+
+    server {
+        server_name _;
+
+        listen 80;
+
+        gzip             on;
+        gzip_min_length  2000;
+        gzip_proxied     any;
+
+        proxy_read_timeout 60s;
+        client_max_body_size 64M;
+
+        add_header X-Frame-Options "SAMEORIGIN";
+        location /metrics {
+            return 404;
+            access_log off;
+        }
+        location / {
+            error_page 418 = @proxy_to_app;
+            return 418;
+        }
+        location @proxy_to_app {
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+            if ($http_x_forwarded_proto != "https") {
+                rewrite ^ https://$host$request_uri? permanent;
+            }
+            proxy_set_header Host      $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_pass http://localhost:3000;
+        }
+        access_log /dev/stdout json_log if=$loggable;
+    }

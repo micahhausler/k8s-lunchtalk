@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: lunchtalk
-        image: "micahhausler/k8s-lunchtalk:02c37fe"
+        image: "micahhausler/k8s-lunchtalk:a84d3cf"
         ports:
         - name: web
           containerPort: 3000

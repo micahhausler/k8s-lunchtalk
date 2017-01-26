@@ -1,0 +1,53 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: redis
+  name: redis
+  namespace: demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - image: "redis:alpine"
+        name: redis
+        ports:
+        - containerPort: 6379
+          protocol: TCP
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: lunchtalk.secret
+              key: password
+        args:
+        - "redis-server"
+        - "--requirepass"
+        - "$(REDIS_PASSWORD)"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/scrape: 'false'
+  labels:
+    app: redis
+  name: redis
+  namespace: demo
+spec:
+  selector:
+    app: redis
+  #type: NodePort
+  type: ClusterIP
+  ports:
+  - name: redis
+    protocol: TCP
+    port: 6379
+    targetPort: 6379

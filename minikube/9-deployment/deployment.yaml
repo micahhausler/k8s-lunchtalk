@@ -1,0 +1,75 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: lunchtalk
+  namespace: demo
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: lunchtalk
+  strategy:
+    rollingUpdate:
+      maxSurge: "50%"
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      name: lunchtalk
+      labels:
+        app: lunchtalk
+    spec:
+      containers:
+      - name: lunchtalk
+        image: "micahhausler/k8s-lunchtalk:a84d3cf"
+        env:
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: lunchtalk.config
+              key: redis.host
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: lunchtalk.secret
+              key: redis.password
+        resources:
+          requests:
+            cpu: 250.0m
+            memory: 64Mi
+          limits:
+            cpu: 500.0m
+            memory: 128Mi
+        ports:
+        - name: web
+          containerPort: 3000
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: 3000
+          initialDelaySeconds: 10
+          timeoutSeconds: 10
+      - name: nginx
+        image: "nginx:alpine"
+        args: ["/usr/sbin/nginx", "-c", "/opt/nginx/nginx.conf"]
+        resources:
+          limits:
+            memory: 64Mi
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /opt/nginx/
+          name: nginx-conf-volume
+        - mountPath: /etc/nginx/sites-enabled
+          name: lunchtalk-conf-volume
+      volumes:
+      - name: "nginx-conf-volume"
+        configMap:
+          name: nginx-base.config
+      - name: "lunchtalk-conf-volume"
+        configMap:
+          name: lunchtalk.config
+          items:
+          - key: lunchtalk.conf
+            path: lunchtalk.conf

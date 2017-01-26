@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:us-west-2:095427547185:certificate/47657208-18c3-44c4-92f1-b70d908220bf"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+    prometheus.io/scrape: 'false'
+  labels:
+    app: lunchtalk
+  name: lunchtalk
+  namespace: demo
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: lunchtalk
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '3000'
+    prometheus.io/path: '/metrics'
+  labels:
+    app: lunchtalk
+  name: lunchtalk-internal
+  namespace: lunchtalk
+spec:
+  selector:
+    app: lunchtalk
+  ports:
+  - name: http
+    port: 3000
+    protocol: TCP
+    targetPort: 3000
+  type: NodePort
